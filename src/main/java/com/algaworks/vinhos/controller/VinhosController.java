@@ -5,6 +5,7 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,9 +24,21 @@ public class VinhosController {
 	@Autowired
 	private Vinhos vinhos;
 	
-	@GetMapping("/{id}")
-	public ModelAndView editar(@PathVariable Long id) {
-		return novo(vinhos.findOne(id));
+	@DeleteMapping("/{id}")
+	public String remover(@PathVariable Long id, RedirectAttributes attributes) {
+		vinhos.delete(id);
+		
+		attributes.addFlashAttribute("mensagem", "Vinho removido com sucesso!");
+		
+		return "redirect:/vinhos";
+	}
+	
+	@GetMapping
+	public ModelAndView listar() {
+		ModelAndView modelAndView = new ModelAndView("vinhos/lista-vinhos");
+		modelAndView.addObject("vinhos", vinhos.findAll());
+		
+		return modelAndView;
 	}
 	
 	@GetMapping("/novo")
@@ -33,13 +46,14 @@ public class VinhosController {
 		ModelAndView modelAndView = new ModelAndView("vinhos/cadastro-vinho");
 		
 		modelAndView.addObject(vinho);
-		modelAndView.addObject("tipos", TipoVinho.values());
+		modelAndView.addObject("tipos", TipoVinho.values());		
 		
 		return modelAndView;
 	}
 	
 	@PostMapping("/novo")
-	public ModelAndView salvar(@Valid Vinho vinho, BindingResult result, RedirectAttributes attributes) {
+	public ModelAndView salvar(@Valid Vinho vinho, BindingResult result,
+			RedirectAttributes attributes) {
 		if (result.hasErrors()) {
 			return novo(vinho);
 		}
@@ -48,8 +62,11 @@ public class VinhosController {
 		
 		attributes.addFlashAttribute("mensagem", "Vinho salvo com sucesso!");
 		
-		return new ModelAndView("redirect:/vinhos/novo");
-		
+		return new ModelAndView("redirect:/vinhos");
 	}
-
+	
+	@GetMapping("/{id}")
+	public ModelAndView editar(@PathVariable Long id) {
+		return novo(vinhos.findOne(id));
+	}
 }
